@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /paneladmin/
+Disallow: /checkout/
+
+Sitemap: https://anigames.com/sitemap.xml

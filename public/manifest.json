@@ -1,0 +1,17 @@
+{
+  "short_name": "AniGames",
+  "name": "AniGames Store",
+  "description": "Tu universo anime, gaming y coleccionables premium.",
+  "icons": [
+    {
+      "src": "corazon.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#080910",
+  "theme_color": "#ff007f",
+  "display": "standalone",
+  "orientation": "portrait"
+}
