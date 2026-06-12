@@ -149,7 +149,7 @@ export default function Login() {
               </button>
 
               <div className="text-center text-[10px] text-geek-muted">
-                Tip: Usa correo <b className="text-geek-light">admin@anigames.com</b> y clave <b className="text-geek-light">admin123</b> para ingresar como Superadmin.
+                Tip: Usa correo user@gmail.com
               </div>
             </form>
           ) : (

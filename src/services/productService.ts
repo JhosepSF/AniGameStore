@@ -87,24 +87,56 @@ export interface Question {
 // Mock Categories (Matching the core franchises)
 // ----------------------------------------------------
 export const MOCK_CATEGORIES: Category[] = [
-  { id: 'cat-one-piece', name: 'One Piece', slug: 'one-piece', description: 'Figuras, posters, mochilas y llaveros de la tripulación Sombrero de Paja.' },
-  { id: 'cat-naruto', name: 'Naruto', slug: 'naruto', description: 'Coleccionables de la Aldea de la Hoja, figuras escala y accesorios ninja.' },
-  { id: 'cat-dragon-ball', name: 'Dragon Ball', slug: 'dragon-ball', description: 'Estatuas de Goku, villanos clásicos y esferas del dragón de colección.' },
-  { id: 'cat-demon-slayer', name: 'Demon Slayer', slug: 'demon-slayer', description: 'Katanas LEGO, figuras de pilares y peluches oficiales de Kimetsu no Yaiba.' },
-  { id: 'cat-pokemon', name: 'Pokémon', slug: 'pokemon', description: 'Pokébolas LED, peluches cosplay e iluminación decorativa de Pikachu.' },
-  { id: 'cat-genshin-impact', name: 'Genshin Impact', slug: 'genshin-impact', description: 'Figuras oficiales a escala de Teyvat, Xiao, Hu Tao y Paimon.' },
-  { id: 'cat-marvel', name: 'Marvel', slug: 'marvel', description: 'Colección de superhéroes, figuras de Venom, Iron Man y bustos.' },
-  { id: 'cat-adicionales', name: 'Adicionales', slug: 'adicionales', description: 'Nintendo Switch OLED, accesorios gamer, mandos PS5 y gadgets geek.' }
+  { id: 'c0c0c0c0-c0c0-c0c0-c0c0-000000000001', name: 'One Piece', slug: 'one-piece', description: 'Figuras, posters, mochilas y llaveros de la tripulación Sombrero de Paja.' },
+  { id: 'c0c0c0c0-c0c0-c0c0-c0c0-000000000002', name: 'Naruto', slug: 'naruto', description: 'Coleccionables de la Aldea de la Hoja, figuras escala y accesorios ninja.' },
+  { id: 'c0c0c0c0-c0c0-c0c0-c0c0-000000000003', name: 'Dragon Ball', slug: 'dragon-ball', description: 'Estatuas de Goku, villanos clásicos y esferas del dragón de colección.' },
+  { id: 'c0c0c0c0-c0c0-c0c0-c0c0-000000000004', name: 'Demon Slayer', slug: 'demon-slayer', description: 'Katanas LEGO, figuras de pilares y peluches oficiales de Kimetsu no Yaiba.' },
+  { id: 'c0c0c0c0-c0c0-c0c0-c0c0-000000000005', name: 'Pokémon', slug: 'pokemon', description: 'Pokébolas LED, peluches cosplay e iluminación decorativa de Pikachu.' },
+  { id: 'c0c0c0c0-c0c0-c0c0-c0c0-000000000006', name: 'Genshin Impact', slug: 'genshin-impact', description: 'Figuras oficiales a escala de Teyvat, Xiao, Hu Tao y Paimon.' },
+  { id: 'c0c0c0c0-c0c0-c0c0-c0c0-000000000007', name: 'Marvel', slug: 'marvel', description: 'Colección de superhéroes, figuras de Venom, Iron Man y bustos.' },
+  { id: 'c0c0c0c0-c0c0-c0c0-c0c0-000000000008', name: 'Adicionales', slug: 'adicionales', description: 'Nintendo Switch OLED, accesorios gamer, mandos PS5 y gadgets geek.' }
 ]
 
 export const MOCK_BRANDS: Brand[] = [
-  { id: 'b-1', name: 'Bandai Spirits', slug: 'bandai-spirits' },
-  { id: 'b-2', name: 'Funko Pop', slug: 'funko-pop' },
-  { id: 'b-3', name: 'Nintendo', slug: 'nintendo' },
-  { id: 'b-4', name: 'Razer', slug: 'razer' },
-  { id: 'b-5', name: 'Sony PlayStation', slug: 'sony-playstation' },
-  { id: 'b-6', name: 'Logitech G', slug: 'logitech-g' }
+  { id: 'b0b0b0b0-b0b0-b0b0-b0b0-000000000001', name: 'Bandai Spirits', slug: 'bandai-spirits' },
+  { id: 'b0b0b0b0-b0b0-b0b0-b0b0-000000000002', name: 'Funko Pop', slug: 'funko-pop' },
+  { id: 'b0b0b0b0-b0b0-b0b0-b0b0-000000000003', name: 'Nintendo', slug: 'nintendo' },
+  { id: 'b0b0b0b0-b0b0-b0b0-b0b0-000000000004', name: 'Razer', slug: 'razer' },
+  { id: 'b0b0b0b0-b0b0-b0b0-b0b0-000000000005', name: 'Sony PlayStation', slug: 'sony-playstation' },
+  { id: 'b0b0b0b0-b0b0-b0b0-b0b0-000000000006', name: 'Logitech G', slug: 'logitech-g' }
 ]
+
+export const categoryUuidMap: Record<string, string> = {
+  'cat-one-piece': 'c0c0c0c0-c0c0-c0c0-c0c0-000000000001',
+  'cat-naruto': 'c0c0c0c0-c0c0-c0c0-c0c0-000000000002',
+  'cat-dragon-ball': 'c0c0c0c0-c0c0-c0c0-c0c0-000000000003',
+  'cat-demon-slayer': 'c0c0c0c0-c0c0-c0c0-c0c0-000000000004',
+  'cat-pokemon': 'c0c0c0c0-c0c0-c0c0-c0c0-000000000005',
+  'cat-genshin-impact': 'c0c0c0c0-c0c0-c0c0-c0c0-000000000006',
+  'cat-marvel': 'c0c0c0c0-c0c0-c0c0-c0c0-000000000007',
+  'cat-adicionales': 'c0c0c0c0-c0c0-c0c0-c0c0-000000000008'
+}
+
+const skuPrefixMap: Record<string, string> = {
+  'OP': '1111',
+  'NS': '2222',
+  'DB': '3333',
+  'DS': '4444',
+  'PO': '5555',
+  'GI': '6666',
+  'MA': '7777',
+  'AA': '8888'
+}
+
+export function getProductUuidFromSku(sku: string): string {
+  const parts = sku.split('-')
+  const prefix = parts[0]
+  const numPart = parts[1] || '000'
+  const code = skuPrefixMap[prefix] || '0000'
+  const paddedNum = numPart.padStart(8, '0')
+  return `d0d0d0d0-d0d0-d0d0-d0d0-${code}${paddedNum}`
+}
+
 
 // Raw products list input from the user
 const rawProductsData = [
@@ -252,16 +284,17 @@ const typeImages: Record<string, string[]> = {
 export const MOCK_PRODUCTS: Product[] = rawProductsData.map((raw, i) => {
   const images = typeImages[raw.type] || typeImages['general']
   const slug = raw.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + raw.sku.toLowerCase()
+  const realCatId = categoryUuidMap[raw.catId] || raw.catId
   return {
-    id: `p-${raw.sku.toLowerCase()}`,
+    id: getProductUuidFromSku(raw.sku),
     sku: raw.sku,
     internal_code: `AG-${raw.sku}`,
     name: raw.name,
     slug: slug,
     short_description: `${raw.name} oficial e importado de alta calidad. Perfecto para fanáticos y coleccionistas.`,
     long_description: `${raw.name} cuenta con excelentes acabados y detalles de pintura fieles al diseño original. Ideal para coleccionar y decorar tu espacio geek.`,
-    category_id: raw.catId,
-    category_name: MOCK_CATEGORIES.find(c => c.id === raw.catId)?.name || 'Adicionales',
+    category_id: realCatId,
+    category_name: MOCK_CATEGORIES.find(c => c.id === realCatId)?.name || 'Adicionales',
     franchise: raw.franchise,
     price_normal: Math.round(raw.price * 1.25 * 10) / 10, // normal is 25% higher for fake discount
     price_offer: raw.price,
