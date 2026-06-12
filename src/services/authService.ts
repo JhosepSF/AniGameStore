@@ -13,17 +13,7 @@ export interface UserProfile {
 }
 
 // Keep a simple in-memory session when running in Mock mode
-let mockSessionUser: UserProfile | null = {
-  id: 'usr-mock-123',
-  email: 'admin@anigames.com',
-  first_name: 'Jhosep',
-  last_name: 'San Martin',
-  phone: '+51 987 654 321',
-  avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=60',
-  points_balance: 1250,
-  wallet_balance: 45.50,
-  role: 'Superadmin' // Set to Admin to explore both admin panel and standard buyer flows!
-}
+let mockSessionUser: UserProfile | null = null
 
 export const authService = {
   async getCurrentUser(): Promise<UserProfile | null> {
