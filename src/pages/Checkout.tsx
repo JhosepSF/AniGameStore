@@ -48,9 +48,81 @@ export default function Checkout() {
   const [cardCvc, setCardCvc] = useState('')
   const [operationNumber, setOperationNumber] = useState('')
 
+  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, '') // remove non-digits
+    if (val.length > 4) {
+      val = val.substr(0, 4)
+    }
+    if (val.length > 2) {
+      setCardExpiry(val.substr(0, 2) + '/' + val.substr(2))
+    } else {
+      setCardExpiry(val)
+    }
+  }
+
+  const isCardValid = () => {
+    if (cardNumber.length !== 16) return false
+    if (cardCvc.length !== 3) return false
+    if (cardExpiry.length !== 5) return false
+
+    const [mmStr, yyStr] = cardExpiry.split('/')
+    if (!mmStr || !yyStr) return false
+
+    const mm = parseInt(mmStr, 10)
+    const yy = parseInt(yyStr, 10)
+
+    if (isNaN(mm) || isNaN(yy) || mm < 1 || mm > 12) return false
+
+    const now = new Date()
+    const currentYear = now.getFullYear() % 100 // 2-digit year (e.g. 26)
+    const currentMonth = now.getMonth() + 1 // 1-indexed
+
+    if (yy < currentYear) return false
+    if (yy === currentYear && mm < currentMonth) return false
+
+    return true
+  }
+
   const handleAddNewAddress = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!fullName || !addressLine || !phone) return
+
+    if (fullName.trim().length < 5) {
+      Swal.fire({
+        title: 'Nombre Inválido',
+        text: 'Por favor, ingresa tu nombre y apellido completo (mínimo 5 caracteres).',
+        icon: 'warning',
+        background: '#121422',
+        color: '#f1f3f9',
+        confirmButtonColor: '#ff007f'
+      })
+      return
+    }
+
+    if (phone.length !== 9 || !phone.startsWith('9')) {
+      Swal.fire({
+        title: 'Celular Inválido',
+        text: 'El número de celular debe tener exactamente 9 dígitos y comenzar con 9.',
+        icon: 'warning',
+        background: '#121422',
+        color: '#f1f3f9',
+        confirmButtonColor: '#ff007f'
+      })
+      return
+    }
+
+    if (addressLine.trim().length < 8) {
+      Swal.fire({
+        title: 'Dirección Inválida',
+        text: 'Por favor, escribe una dirección más detallada (mínimo 8 caracteres).',
+        icon: 'warning',
+        background: '#121422',
+        color: '#f1f3f9',
+        confirmButtonColor: '#ff007f'
+      })
+      return
+    }
+
     try {
       await addAddress({
         full_name: fullName,
@@ -271,7 +343,7 @@ export default function Checkout() {
                         type="text"
                         required
                         value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
+                        onChange={(e) => setFullName(e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, ''))}
                         placeholder="Jhosep San Martin"
                         className="w-full px-3 py-2 bg-[#121422] border border-white/5 rounded-xl text-xs"
                       />
@@ -282,7 +354,7 @@ export default function Checkout() {
                         type="text"
                         required
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').substr(0, 9))}
                         placeholder="987654321"
                         className="w-full px-3 py-2 bg-[#121422] border border-white/5 rounded-xl text-xs"
                       />
@@ -428,7 +500,7 @@ export default function Checkout() {
                           type="text"
                           required
                           value={cardExpiry}
-                          onChange={(e) => setCardExpiry(e.target.value.substr(0, 5))}
+                          onChange={handleExpiryChange}
                           placeholder="MM/YY"
                           className="w-full px-3 py-2 bg-[#121422] border border-white/5 rounded-xl text-xs"
                         />
@@ -514,7 +586,7 @@ export default function Checkout() {
                 </button>
                 <button
                   disabled={
-                    (paymentGateway === 'Stripe' && (!cardNumber || !cardExpiry || !cardCvc)) ||
+                    ((paymentGateway === 'Stripe' || paymentGateway === 'Mercado Pago') && !isCardValid()) ||
                     ((paymentGateway === 'Yape/Plin' || paymentGateway === 'Transferencia') && operationNumber.length < 6)
                   }
                   onClick={() => setStep(4)}
