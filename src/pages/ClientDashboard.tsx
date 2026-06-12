@@ -6,6 +6,17 @@ import { orderService, Order, ShipmentTracking } from '../services/orderService'
 import { rewardsService, WalletMovement, RewardMovement, Referral } from '../services/rewardsService'
 import Swal from 'sweetalert2'
 
+const statusTranslations: Record<string, string> = {
+  Pending: 'Pendiente de Pago',
+  Paid: 'Pagado',
+  Preparing: 'Preparando Envío',
+  Sent: 'Enviado',
+  'In Transit': 'En Tránsito',
+  Delivered: 'Entregado',
+  Cancelled: 'Cancelado',
+  Returned: 'Devuelto'
+}
+
 export default function ClientDashboard() {
   const navigate = useNavigate()
   const { user, updateProfile } = useAuthStore()
@@ -231,7 +242,7 @@ export default function ClientDashboard() {
                               ? 'bg-secondary/15 text-secondary border-secondary/25'
                               : 'bg-amber-500/15 text-amber-500 border-amber-500/25'
                           }`}>
-                            {ord.status}
+                            {statusTranslations[ord.status] || ord.status}
                           </span>
                         </div>
                       </div>
@@ -263,13 +274,26 @@ export default function ClientDashboard() {
                         })}
                       </div>
 
-                      {/* Courier Tracking Details */}
-                      {ord.tracking_code && (
-                        <div className="flex justify-between items-center text-[10px] text-geek-muted pt-2 border-t border-white/5">
-                          <span>Courier: <b>{ord.shipping_method}</b></span>
-                          <span>Código Rastro: <b className="text-secondary select-all">{ord.tracking_code}</b></span>
-                        </div>
-                      )}
+                      {/* Payment info & Courier Tracking Details */}
+                      <div className="pt-2 border-t border-white/5 space-y-1.5 text-[10px] text-geek-muted">
+                        {ord.payments && ord.payments.length > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span>Método Pago: <b className="text-geek-light">{ord.payments[0].gateway}</b> ({ord.payments[0].status === 'completed' ? 'Verificado' : 'Pendiente Verificación'})</span>
+                            {ord.payments[0].transaction_id && (
+                              <span>
+                                {['Yape/Plin', 'Transferencia'].includes(ord.payments[0].gateway) ? 'N° Operación' : 'Transacción'}:{' '}
+                                <b className="text-accent select-all font-mono">{ord.payments[0].transaction_id}</b>
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {ord.tracking_code && (
+                          <div className="flex justify-between items-center">
+                            <span>Courier: <b>{ord.shipping_method}</b></span>
+                            <span>Código Rastro: <b className="text-secondary select-all">{ord.tracking_code}</b></span>
+                          </div>
+                        )}
+                      </div>
 
                     </div>
                   ))}

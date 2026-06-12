@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { Star, Heart, ShoppingCart, Truck, ShieldAlert, Award, Send, MessageSquare } from 'lucide-react'
 import { productService, Product, ProductVariant, Review, Question } from '../services/productService'
 import { useCartStore } from '../stores/cartStore'
@@ -29,6 +29,73 @@ export default function ProductDetails() {
 
   // Zoom position
   const [zoomStyle, setZoomStyle] = useState({ display: 'none', backgroundPosition: '0% 0%' })
+
+  const navigate = useNavigate()
+  const [isFavorited, setIsFavorited] = useState(false)
+
+  useEffect(() => {
+    if (product && user) {
+      const favs = JSON.parse(localStorage.getItem(`favs_${user.id}`) || '[]')
+      setIsFavorited(favs.includes(product.id))
+    } else {
+      setIsFavorited(false)
+    }
+  }, [product, user])
+
+  const handleFavoriteToggle = () => {
+    if (!product) return
+    if (!user) {
+      Swal.fire({
+        title: 'Iniciar Sesión',
+        text: 'Debes iniciar sesión para agregar productos a tus favoritos.',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Ingresar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#ff007f',
+        background: '#121422',
+        color: '#f1f3f9'
+      }).then((res) => {
+        if (res.isConfirmed) {
+          navigate('/login')
+        }
+      })
+      return
+    }
+
+    const favs = JSON.parse(localStorage.getItem(`favs_${user.id}`) || '[]')
+    let newFavs
+    if (favs.includes(product.id)) {
+      newFavs = favs.filter((id: string) => id !== product.id)
+      setIsFavorited(false)
+      Swal.fire({
+        title: 'Favorito Eliminado',
+        text: `${product.name} fue quitado de tus favoritos.`,
+        icon: 'info',
+        toast: true,
+        position: 'top-end',
+        timer: 2000,
+        showConfirmButton: false,
+        background: '#121422',
+        color: '#f1f3f9'
+      })
+    } else {
+      newFavs = [...favs, product.id]
+      setIsFavorited(true)
+      Swal.fire({
+        title: '¡Agregado a Favoritos!',
+        text: `${product.name} fue guardado.`,
+        icon: 'success',
+        toast: true,
+        position: 'top-end',
+        timer: 2000,
+        showConfirmButton: false,
+        background: '#121422',
+        color: '#f1f3f9'
+      })
+    }
+    localStorage.setItem(`favs_${user.id}`, JSON.stringify(newFavs))
+  }
 
   useEffect(() => {
     if (!slug) return
@@ -300,12 +367,22 @@ export default function ProductDetails() {
               </button>
             </div>
 
-            <button
+             <button
               onClick={handleAddToCart}
               className="flex-1 py-3.5 glow-btn-pink text-white font-extrabold rounded-xl shadow-lg flex items-center justify-center space-x-2 transition"
             >
               <ShoppingCart className="w-5 h-5" />
               <span>Agregar al Carrito</span>
+            </button>
+
+            <button
+              onClick={handleFavoriteToggle}
+              className={`p-3.5 bg-white/5 border rounded-xl transition-all duration-300 ${
+                isFavorited ? 'text-primary border-primary bg-primary/10 shadow-neon-pink' : 'border-white/10 text-geek-muted hover:text-white'
+              }`}
+              title={isFavorited ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+            >
+              <Heart className={`w-5 h-5 ${isFavorited ? 'fill-primary' : ''}`} />
             </button>
           </div>
 

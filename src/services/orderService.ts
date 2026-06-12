@@ -32,6 +32,7 @@ export interface Order {
   points_amount_used?: number
   created_at: string
   items?: OrderItem[]
+  payments?: any[]
 }
 
 export interface ShipmentTracking {
@@ -68,6 +69,9 @@ export const MOCK_ORDERS: Order[] = [
     created_at: '2026-06-08T11:00:00Z',
     items: [
       { product_id: 'p-1', name: 'Figura Luffy Gear 5 - Ichiban Kojo (Joy Boy Edition)', sku: 'FIG-OP-LUFFY-G5', price: 249.90, quantity: 1, total: 249.90 }
+    ],
+    payments: [
+      { gateway: 'Stripe', transaction_id: 'card_mock8947', amount: 259.88, status: 'completed' }
     ]
   },
   {
@@ -92,6 +96,9 @@ export const MOCK_ORDERS: Order[] = [
     created_at: '2026-06-10T15:30:00Z',
     items: [
       { product_id: 'p-4', name: 'Mousepad Gigante Demon Slayer - Tanjiro & Nezuko (900x400)', sku: 'PAD-DS-TANJIRO-XL', price: 89.00, quantity: 1, total: 89.00 }
+    ],
+    payments: [
+      { gateway: 'Yape/Plin', transaction_id: '12837492', amount: 105.02, status: 'completed' }
     ]
   }
 ]
@@ -118,13 +125,15 @@ export const orderService = {
     if (isSupabaseConfigured) {
       const { data, error } = await supabase.from('orders').select(`
         *,
-        order_items(*)
+        order_items(*),
+        payments(*)
       `).eq('user_id', userId)
       
       if (!error && data) {
         return data.map((item: any) => ({
           ...item,
-          items: item.order_items || []
+          items: item.order_items || [],
+          payments: item.payments || []
         }))
       }
     }
@@ -135,13 +144,15 @@ export const orderService = {
     if (isSupabaseConfigured) {
       const { data, error } = await supabase.from('orders').select(`
         *,
-        order_items(*)
+        order_items(*),
+        payments(*)
       `).order('created_at', { ascending: false })
 
       if (!error && data) {
         return data.map((item: any) => ({
           ...item,
-          items: item.order_items || []
+          items: item.order_items || [],
+          payments: item.payments || []
         }))
       }
     }
@@ -152,13 +163,15 @@ export const orderService = {
     if (isSupabaseConfigured) {
       const { data, error } = await supabase.from('orders').select(`
         *,
-        order_items(*)
+        order_items(*),
+        payments(*)
       `).eq('id', id).single()
 
       if (!error && data) {
         return {
           ...data,
-          items: data.order_items || []
+          items: data.order_items || [],
+          payments: data.payments || []
         }
       }
     }
@@ -166,7 +179,11 @@ export const orderService = {
     return found || null
   },
 
-  async createOrder(order: Omit<Order, 'id' | 'order_number' | 'created_at'>, items: OrderItem[]): Promise<Order> {
+  async createOrder(
+    order: Omit<Order, 'id' | 'order_number' | 'created_at'>,
+    items: OrderItem[],
+    paymentDetails?: { gateway: string; transactionId?: string }
+  ): Promise<Order> {
     const orderNum = 'AG-' + new Date().getFullYear() + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + Math.floor(1000 + Math.random() * 9000)
     
     if (isSupabaseConfigured) {
@@ -203,9 +220,26 @@ export const orderService = {
         const { error: itErr } = await supabase.from('order_items').insert(itemsToInsert)
         if (itErr) throw new Error(itErr.message)
 
+        // Insert payment if provided
+        let createdPayment = null
+        if (paymentDetails) {
+          const { data: payData, error: payErr } = await supabase.from('payments').insert({
+            order_id: newOrder.id,
+            gateway: paymentDetails.gateway,
+            transaction_id: paymentDetails.transactionId || null,
+            amount: order.total,
+            status: order.status === 'Paid' ? 'completed' : 'pending'
+          }).select().single()
+          
+          if (!payErr && payData) {
+            createdPayment = payData
+          }
+        }
+
         return {
           ...newOrder,
-          items: itemsToInsert
+          items: itemsToInsert,
+          payments: createdPayment ? [createdPayment] : []
         }
       } catch (err: any) {
         console.error('Order creation failed on Supabase, fallback to Mock.', err)
@@ -213,12 +247,20 @@ export const orderService = {
       }
     }
 
+    const mockPayment = paymentDetails ? [{
+      gateway: paymentDetails.gateway,
+      transaction_id: paymentDetails.transactionId || null,
+      amount: order.total,
+      status: order.status === 'Paid' ? 'completed' : 'pending'
+    }] : []
+
     const newOrd: Order = {
       id: 'ord-' + Math.random().toString(36).substr(2, 9),
       order_number: orderNum,
       ...order,
       created_at: new Date().toISOString(),
-      items: items
+      items: items,
+      payments: mockPayment
     }
     MOCK_ORDERS.unshift(newOrd)
     return newOrd
@@ -236,12 +278,25 @@ export const orderService = {
         .single()
 
       if (error) throw new Error(error.message)
+
+      if (status === 'Paid') {
+        await supabase.from('payments')
+          .update({ status: 'completed' })
+          .eq('order_id', id)
+      }
+
       return data
     }
 
     const index = MOCK_ORDERS.findIndex(o => o.id === id)
     if (index !== -1) {
       MOCK_ORDERS[index].status = status
+      if (status === 'Paid' && MOCK_ORDERS[index].payments) {
+        MOCK_ORDERS[index].payments = MOCK_ORDERS[index].payments.map((p: any) => ({
+          ...p,
+          status: 'completed'
+        }))
+      }
       if (trackingCode) {
         MOCK_ORDERS[index].tracking_code = trackingCode
         // Seed tracking history

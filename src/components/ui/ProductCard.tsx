@@ -1,8 +1,9 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, Star, Heart } from 'lucide-react'
 import { Product } from '../../services/productService'
 import { useCartStore } from '../../stores/cartStore'
+import { useAuthStore } from '../../stores/authStore'
 import Swal from 'sweetalert2'
 
 interface ProductCardProps {
@@ -10,7 +11,81 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const navigate = useNavigate()
+  const { user } = useAuthStore()
   const { addItem } = useCartStore()
+
+  const [isFavorited, setIsFavorited] = React.useState(() => {
+    if (!user) return false
+    const favs = JSON.parse(localStorage.getItem(`favs_${user.id}`) || '[]')
+    return favs.includes(product.id)
+  })
+
+  // Sync state if user changes
+  React.useEffect(() => {
+    if (user) {
+      const favs = JSON.parse(localStorage.getItem(`favs_${user.id}`) || '[]')
+      setIsFavorited(favs.includes(product.id))
+    } else {
+      setIsFavorited(false)
+    }
+  }, [user, product.id])
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!user) {
+      Swal.fire({
+        title: 'Iniciar Sesión',
+        text: 'Debes iniciar sesión para agregar productos a tus favoritos.',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Ingresar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#ff007f',
+        background: '#121422',
+        color: '#f1f3f9'
+      }).then((res) => {
+        if (res.isConfirmed) {
+          navigate('/login')
+        }
+      })
+      return
+    }
+
+    const favs = JSON.parse(localStorage.getItem(`favs_${user.id}`) || '[]')
+    let newFavs
+    if (favs.includes(product.id)) {
+      newFavs = favs.filter((id: string) => id !== product.id)
+      setIsFavorited(false)
+      Swal.fire({
+        title: 'Favorito Eliminado',
+        text: `${product.name} fue quitado de tus favoritos.`,
+        icon: 'info',
+        toast: true,
+        position: 'top-end',
+        timer: 2000,
+        showConfirmButton: false,
+        background: '#121422',
+        color: '#f1f3f9'
+      })
+    } else {
+      newFavs = [...favs, product.id]
+      setIsFavorited(true)
+      Swal.fire({
+        title: '¡Agregado a Favoritos!',
+        text: `${product.name} fue guardado.`,
+        icon: 'success',
+        toast: true,
+        position: 'top-end',
+        timer: 2000,
+        showConfirmButton: false,
+        background: '#121422',
+        color: '#f1f3f9'
+      })
+    }
+    localStorage.setItem(`favs_${user.id}`, JSON.stringify(newFavs))
+  }
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -52,8 +127,13 @@ export default function ProductCard({ product }: ProductCardProps) {
     <div className={`group relative flex flex-col w-full bg-[#121422] rounded-2xl border border-white/5 overflow-hidden transition-all duration-300 ${cardGlowClass}`}>
       
       {/* Favorite Button Overlay */}
-      <button className="absolute top-3 right-3 z-10 p-2 rounded-full bg-background/60 hover:bg-background/80 text-geek-light hover:text-primary transition">
-        <Heart className="w-4 h-4" />
+      <button
+        onClick={handleFavoriteClick}
+        className={`absolute top-3 right-3 z-10 p-2 rounded-full bg-background/60 hover:bg-background/80 transition ${
+          isFavorited ? 'text-primary' : 'text-geek-light hover:text-primary'
+        }`}
+      >
+        <Heart className={`w-4 h-4 ${isFavorited ? 'fill-primary' : ''}`} />
       </button>
 
       {/* Badges Overlay */}

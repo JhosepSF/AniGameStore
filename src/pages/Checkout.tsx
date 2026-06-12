@@ -46,6 +46,7 @@ export default function Checkout() {
   const [cardNumber, setCardNumber] = useState('')
   const [cardExpiry, setCardExpiry] = useState('')
   const [cardCvc, setCardCvc] = useState('')
+  const [operationNumber, setOperationNumber] = useState('')
 
   const handleAddNewAddress = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,9 +83,10 @@ export default function Checkout() {
       phone: user.phone || '999999999'
     }
 
+    const isManual = paymentGateway === 'Yape/Plin' || paymentGateway === 'Transferencia'
     const orderPayload = {
       user_id: user.id,
-      status: 'Paid' as const, // Automatically process payment success in mock
+      status: (isManual ? 'Pending' : 'Paid') as 'Pending' | 'Paid',
       subtotal: getSubtotal(),
       shipping_cost: shippingCost,
       tax: getTax(),
@@ -111,6 +113,15 @@ export default function Checkout() {
       }
     })
 
+    const paymentDetails = {
+      gateway: paymentGateway,
+      transactionId: (paymentGateway === 'Stripe' || paymentGateway === 'Mercado Pago')
+        ? 'card_' + Math.random().toString(36).substr(2, 9)
+        : (paymentGateway === 'PayPal')
+        ? 'pay_' + Math.random().toString(36).substr(2, 9)
+        : operationNumber
+    }
+
     try {
       Swal.fire({
         title: 'Procesando Pago...',
@@ -126,7 +137,7 @@ export default function Checkout() {
       // Simulate a small network delay for Stripe/Yape verification
       await new Promise(r => setTimeout(r, 2000))
 
-      const created = await orderService.createOrder(orderPayload, orderItemsPayload)
+      const created = await orderService.createOrder(orderPayload, orderItemsPayload, paymentDetails)
 
       // Deduct wallet balance locally in useAuthStore for mock visual
       if (walletUsed > 0 && useAuthStore.getState().user) {
@@ -155,9 +166,11 @@ export default function Checkout() {
       clearCart()
 
       Swal.fire({
-        title: '¡Pedido Confirmado!',
-        text: `Tu compra con número ${created.order_number} ha sido procesada con éxito.`,
-        icon: 'success',
+        title: isManual ? '¡Pedido Recibido!' : '¡Pedido Confirmado!',
+        text: isManual
+          ? `Tu compra con número ${created.order_number} está pendiente de verificación. Validaremos tu número de operación (${operationNumber}) a la brevedad.`
+          : `Tu compra con número ${created.order_number} ha sido procesada con éxito.`,
+        icon: isManual ? 'info' : 'success',
         confirmButtonText: 'Ver Pedido',
         background: '#121422',
         color: '#f1f3f9',
@@ -437,24 +450,60 @@ export default function Checkout() {
                   <div className="text-center space-y-4">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-geek-light">Pago Seguro con Código QR</h3>
                     <div className="w-40 h-40 bg-white rounded-xl mx-auto flex items-center justify-center border-4 border-accent shadow-neon-green">
-                      <span className="text-background text-xs font-bold">QR Yape / Plin</span>
+                      <div className="w-32 h-32 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-accent/20 to-[#121422] flex flex-col items-center justify-center rounded">
+                        <span className="text-accent font-extrabold tracking-wider text-xs">YAPE / PLIN</span>
+                        <span className="text-[10px] text-geek-light mt-1.5 font-mono">987 654 321</span>
+                        <span className="text-[8px] text-geek-muted mt-0.5">AniGames Store</span>
+                      </div>
                     </div>
                     <p className="text-[10px] text-geek-muted leading-relaxed">
-                      Escanea el código con tu billetera bancaria preferida. Se confirmará de forma automática al generar tu orden.
+                      Escanea el código con tu celular desde la app de Yape o Plin y realiza la transferencia.
                     </p>
+                    <div className="text-left mt-4">
+                      <label className="block text-[10px] font-bold text-geek-muted mb-1.5 uppercase">Número de Operación (Yape/Plin)</label>
+                      <input
+                        type="text"
+                        required
+                        value={operationNumber}
+                        onChange={(e) => setOperationNumber(e.target.value.replace(/\D/g, '').substr(0, 8))}
+                        placeholder="Ingresa los 8 dígitos"
+                        className="w-full px-3 py-2 bg-[#121422] border border-white/5 rounded-xl text-xs text-center font-mono tracking-widest text-accent"
+                      />
+                      <span className="text-[9px] text-geek-muted block mt-1 text-center">Requerido para verificar tu pago (mínimo 6 dígitos).</span>
+                    </div>
                   </div>
-                ) : (
-                  <div className="space-y-2.5 text-xs">
+                ) : paymentGateway === 'Transferencia' ? (
+                  <div className="space-y-4 text-xs">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-geek-light">Instrucciones de Transferencia</h3>
                     <p className="text-geek-muted">Realiza tu depósito en las siguientes cuentas bancarias oficiales:</p>
-                    <div className="p-3 bg-[#121422] rounded-xl border border-white/5">
+                    <div className="p-3 bg-[#121422] rounded-xl border border-white/5 space-y-1">
                       <p><b className="text-geek-light">BCP Soles:</b> 193-98234827-0-45</p>
-                      <p className="text-[10px] text-geek-muted mt-0.5">Titular: AniGames Store S.A.C.</p>
+                      <p className="text-[10px] text-geek-muted">CCI: 002-193009823482704512</p>
+                      <p className="text-[10px] text-geek-muted">Titular: AniGames Store S.A.C.</p>
                     </div>
+                    <div className="text-left mt-4">
+                      <label className="block text-[10px] font-bold text-geek-muted mb-1.5 uppercase">Número de Operación</label>
+                      <input
+                        type="text"
+                        required
+                        value={operationNumber}
+                        onChange={(e) => setOperationNumber(e.target.value.replace(/\D/g, '').substr(0, 8))}
+                        placeholder="Ingresa el número de operación"
+                        className="w-full px-3 py-2 bg-[#121422] border border-white/5 rounded-xl text-xs text-center font-mono tracking-widest text-accent"
+                      />
+                      <span className="text-[9px] text-geek-muted block mt-1 text-center">Sube el código de operación del comprobante (mínimo 6 dígitos).</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center space-y-4">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-geek-light">Pago Seguro con PayPal</h3>
+                    <p className="text-[10px] text-geek-muted leading-relaxed">
+                      El pago se procesará a través de la pasarela de PayPal en la siguiente pantalla.
+                    </p>
                   </div>
                 )}
               </div>
-
+ 
               <div className="flex gap-4">
                 <button
                   onClick={() => setStep(2)}
@@ -464,7 +513,10 @@ export default function Checkout() {
                   <span>Atrás</span>
                 </button>
                 <button
-                  disabled={paymentGateway === 'Stripe' && (!cardNumber || !cardExpiry || !cardCvc)}
+                  disabled={
+                    (paymentGateway === 'Stripe' && (!cardNumber || !cardExpiry || !cardCvc)) ||
+                    ((paymentGateway === 'Yape/Plin' || paymentGateway === 'Transferencia') && operationNumber.length < 6)
+                  }
                   onClick={() => setStep(4)}
                   className="flex-1 py-3.5 glow-btn-green text-background font-extrabold rounded-xl flex items-center justify-center space-x-2 transition disabled:opacity-50"
                 >
@@ -497,7 +549,10 @@ export default function Checkout() {
                   </div>
                   <div>
                     <span className="font-bold text-geek-muted">Método de Cobro:</span>
-                    <p className="text-geek-light mt-0.5">{paymentGateway}</p>
+                    <p className="text-geek-light mt-0.5">
+                      {paymentGateway}
+                      {operationNumber && ` (N° Operación: ${operationNumber})`}
+                    </p>
                   </div>
                 </div>
               </div>

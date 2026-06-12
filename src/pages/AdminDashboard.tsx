@@ -6,6 +6,17 @@ import { productService, Product, Category } from '../services/productService'
 import { orderService, Order } from '../services/orderService'
 import Swal from 'sweetalert2'
 
+const statusTranslations: Record<string, string> = {
+  Pending: 'Pendiente de Pago',
+  Paid: 'Pagado',
+  Preparing: 'Preparando Envío',
+  Sent: 'Enviado',
+  'In Transit': 'En Tránsito',
+  Delivered: 'Entregado',
+  Cancelled: 'Cancelado',
+  Returned: 'Devuelto'
+}
+
 export interface AuditLog {
   id: string
   action: string
@@ -158,6 +169,23 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleConfirmPayment = async (orderId: string, orderNumber: string) => {
+    try {
+      await orderService.updateOrderStatus(orderId, 'Paid')
+      const list = await orderService.getAllOrdersAdmin()
+      setOrders(list)
+
+      setAudits(prev => [
+        { id: Math.random().toString(), action: 'CONFIRM_PAYMENT', details: `Pago del pedido ${orderNumber} confirmado manualmente por el administrador.`, created_at: new Date().toISOString() },
+        ...prev
+      ])
+
+      Swal.fire({ title: 'Pago Confirmado', text: 'El estado del pedido se actualizó a Pagado.', icon: 'success', background: '#121422', color: '#f1f3f9' })
+    } catch (err: any) {
+      console.error(err)
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-geek-light">
       <h1 className="text-3xl font-extrabold tracking-tight mb-8">Consola de Administración</h1>
@@ -284,11 +312,19 @@ export default function AdminDashboard() {
                       <div>
                         <span className="text-xs font-bold text-geek-light">{o.order_number}</span>
                         <span className="block text-[10px] text-geek-muted mt-0.5">Destino: {o.shipping_address?.full_name} - {o.shipping_address?.city}</span>
+                        {o.payments && o.payments.length > 0 && (
+                          <span className="block text-[10px] text-geek-muted mt-0.5">
+                            Pago: <b className="text-geek-light">{o.payments[0].gateway}</b> 
+                            {o.payments[0].transaction_id && ` | N° Operación: `}
+                            {o.payments[0].transaction_id && <b className="text-accent font-mono select-all">{o.payments[0].transaction_id}</b>}
+                            {` (${o.payments[0].status === 'completed' ? 'Completado' : 'Pendiente'})`}
+                          </span>
+                        )}
                       </div>
                       <span className={`px-2.5 py-1 text-[9px] font-bold uppercase rounded border ${
                         o.status === 'Delivered' ? 'bg-accent/15 text-accent border-accent/25' : 'bg-amber-500/15 text-amber-500 border-amber-500/25'
                       }`}>
-                        {o.status}
+                        {statusTranslations[o.status] || o.status}
                       </span>
                     </div>
 
@@ -298,6 +334,14 @@ export default function AdminDashboard() {
                       </div>
                       
                       <div className="flex gap-2">
+                        {o.status === 'Pending' && (
+                          <button
+                            onClick={() => handleConfirmPayment(o.id, o.order_number)}
+                            className="px-3 py-1.5 bg-accent text-background hover:bg-accent/95 text-xs font-bold rounded-lg transition"
+                          >
+                            Confirmar Pago
+                          </button>
+                        )}
                         {o.status === 'Paid' && (
                           <button
                             onClick={() => handleShipOrder(o.id, o.order_number)}
