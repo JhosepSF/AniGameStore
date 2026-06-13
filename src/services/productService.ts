@@ -356,7 +356,23 @@ export const productService = {
         `).eq('status', 'active')
 
         if (filters?.category) {
-          query = query.eq('category_id', filters.category)
+          // Check if category is a UUID, otherwise resolve slug
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(filters.category)
+          if (isUuid) {
+            query = query.eq('category_id', filters.category)
+          } else {
+            const { data: catData } = await supabase
+              .from('categories')
+              .select('id')
+              .eq('slug', filters.category)
+              .maybeSingle()
+            if (catData) {
+              query = query.eq('category_id', catData.id)
+            } else {
+              // Category slug doesn't exist, return empty array
+              return []
+            }
+          }
         }
         if (filters?.brand) {
           query = query.eq('brand_id', filters.brand)
@@ -367,16 +383,10 @@ export const productService = {
         if (filters?.search) {
           query = query.ilike('name', `%${filters.search}%`)
         }
-        if (filters?.minPrice !== undefined) {
-          query = query.gte('price_normal', filters.minPrice)
-        }
-        if (filters?.maxPrice !== undefined) {
-          query = query.lte('price_normal', filters.maxPrice)
-        }
 
         const { data, error } = await query
         if (!error && data) {
-          products = data.map((item: any) => ({
+          let dbProducts = data.map((item: any) => ({
             ...item,
             category_name: item.categories?.name,
             brand_name: item.brands?.name,
@@ -384,16 +394,26 @@ export const productService = {
             variants: item.product_variants || [],
             tags: item.tags || []
           }))
-          if (filters?.sortBy === 'price_asc') {
-            products.sort((a, b) => (a.price_offer || a.price_normal) - (b.price_offer || b.price_normal))
-          } else if (filters?.sortBy === 'price_desc') {
-            products.sort((a, b) => (b.price_offer || b.price_normal) - (a.price_offer || a.price_normal))
-          } else if (filters?.sortBy === 'rating') {
-            products.sort((a, b) => b.rating_avg - a.rating_avg)
-          } else if (filters?.sortBy === 'sales') {
-            products.sort((a, b) => b.sales_count - a.sales_count)
+
+          // Exact price range filtering in memory using actual selling price (normal or offer)
+          if (filters?.minPrice !== undefined) {
+            dbProducts = dbProducts.filter((p: any) => (p.price_offer || p.price_normal) >= filters.minPrice!)
           }
-          return products
+          if (filters?.maxPrice !== undefined) {
+            dbProducts = dbProducts.filter((p: any) => (p.price_offer || p.price_normal) <= filters.maxPrice!)
+          }
+
+          // Sorting
+          if (filters?.sortBy === 'price_asc') {
+            dbProducts.sort((a: any, b: any) => (a.price_offer || a.price_normal) - (b.price_offer || b.price_normal))
+          } else if (filters?.sortBy === 'price_desc') {
+            dbProducts.sort((a: any, b: any) => (b.price_offer || b.price_normal) - (a.price_offer || a.price_normal))
+          } else if (filters?.sortBy === 'rating') {
+            dbProducts.sort((a: any, b: any) => b.rating_avg - a.rating_avg)
+          } else if (filters?.sortBy === 'sales') {
+            dbProducts.sort((a: any, b: any) => b.sales_count - a.sales_count)
+          }
+          return dbProducts
         }
       } catch (err) {
         console.error('Database fetch failed, falling back to mock products.', err)
