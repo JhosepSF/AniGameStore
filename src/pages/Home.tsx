@@ -8,14 +8,14 @@ export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>()
   const [flashSales, setFlashSales] = useState<Product[]>()
   const [categories, setCategories] = useState<Category[]>([])
-  
+
   // Timer State for Flash Sale
   const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 34, seconds: 12 })
 
   useEffect(() => {
     // Fetch categories
     productService.getCategories().then(setCategories)
-    
+
     // Fetch products
     productService.getProducts().then(res => {
       setFeaturedProducts(res.slice(0, 4))
@@ -42,32 +42,32 @@ export default function Home() {
 
   return (
     <div className="space-y-16 pb-20 bg-background text-geek-light">
-      
+
       {/* 1. HERO MAIN PROMO BANNER */}
       <section className="relative overflow-hidden bg-[#0d0e17] border-b border-white/5 py-20 lg:py-24">
         {/* Neon decorative gradient circles */}
         <div className="absolute top-[-10%] left-[-10%] w-96 h-96 rounded-full bg-primary/20 blur-[120px] pointer-events-none"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 rounded-full bg-secondary/20 blur-[120px] pointer-events-none"></div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          
+
           <div className="space-y-6 text-center lg:text-left">
             <span className="inline-flex items-center px-3.5 py-1 text-xs font-bold uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 rounded-full animate-bounce">
               <Sparkles className="w-3.5 h-3.5 mr-1" />
               Colección Especial Wano Kuni
             </span>
             <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-tight">
-              Despierta el Poder del <br />
+              Despierta el Poder de <br />
               <span className="bg-gradient-to-r from-primary via-[#e000ff] to-secondary bg-clip-text text-transparent neon-text-pink">
-                GEAR 5 - JOY BOY
+                MONKEY D. LUFFY
               </span>
             </h1>
             <p className="text-base sm:text-lg text-geek-muted max-w-lg mx-auto lg:mx-0">
-              Llévate la figura legendaria de Luffy Gear 5 con 20% de descuento y obtén cashback automático directo en tu monedero virtual.
+              Llévate la figura de Monkey D. Luffy de 24cm con 20% de descuento y obtén cashback automático directo en tu monedero virtual.
             </p>
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
               <Link
-                to="/producto/figura-luffy-gear5-joyboy"
+                to="/producto/figura-monkey-d-luffy-24cm-op-002"
                 className="px-8 py-3.5 glow-btn-pink text-white font-extrabold rounded-xl shadow-lg transition text-center"
               >
                 Comprar Ahora (20% OFF)
@@ -86,16 +86,16 @@ export default function Home() {
             <div className="relative w-80 h-80 sm:w-[420px] sm:h-[420px] rounded-3xl overflow-hidden border border-white/10 shadow-neon-pink group">
               <img
                 src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3"
-                alt="Luffy Gear 5 Showcase"
+                alt="Luffy 24cm Showcase"
                 className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent"></div>
               <div className="absolute bottom-6 left-6 right-6">
-                <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Edición Limitada</span>
-                <h3 className="text-lg font-bold text-white mt-1">Luffy Gear 5 - Bandai Spirits</h3>
+                <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Edición Especial</span>
+                <h3 className="text-lg font-bold text-white mt-1">Figura Monkey D. Luffy 24cm</h3>
                 <div className="flex justify-between items-center mt-3">
-                  <span className="text-base font-extrabold text-white">S/ 199.90</span>
-                  <span className="text-xs text-accent font-semibold bg-accent/10 px-2 py-0.5 rounded">Ahorra S/ 50.00</span>
+                  <span className="text-base font-extrabold text-white">S/ 50.00</span>
+                  <span className="text-xs text-accent font-semibold bg-accent/10 px-2 py-0.5 rounded">Ahorra S/ 12.50</span>
                 </div>
               </div>
             </div>
@@ -137,9 +137,9 @@ export default function Home() {
       {/* 3. OFERTAS FLASH CON CONTADOR */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="p-8 bg-gradient-to-br from-[#121422] via-[#0d0e17] to-[#1a1c38] rounded-3xl border border-primary/20 shadow-neon-pink relative overflow-hidden">
-          
+
           <div className="flex flex-col md:flex-row justify-between items-center gap-6 relative z-10 mb-8 border-b border-white/5 pb-6">
-            
+
             {/* Header + Timer */}
             <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
               <div className="flex items-center space-x-2 bg-primary/10 text-primary px-3.5 py-1.5 rounded-xl border border-primary/20 font-bold text-sm">
